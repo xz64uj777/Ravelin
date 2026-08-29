@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.AegisScan" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#7DD3C7</item>
+        <item name="colorPrimaryVariant">#0F1418</item>
+        <item name="colorOnPrimary">#071016</item>
+        <item name="android:statusBarColor">#0F1418</item>
+        <item name="android:navigationBarColor">#0F1418</item>
+        <item name="android:windowBackground">#0F1418</item>
+    </style>
+</resources>
