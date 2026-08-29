@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Ravelin</title>
+<style>
+body{margin:0;background:#0F1418;color:#E8EEF2;font-family:system-ui,sans-serif;padding:28px 20px}
+h1{font-size:28px;margin:0 0 8px}
+p{color:#A8B6C0;line-height:1.5}
+.err{color:#E07272}
+</style>
+</head>
+<body>
+<h1>Ravelin</h1>
+<p id="s">Loading console…</p>
+<script>
+(function(){
+  var urls=[
+    'https://raw.githubusercontent.com/xz64uj777/Ravelin/main/Ravelin.html',
+    'https://xz64uj777.github.io/Ravelin/Ravelin.html'
+  ];
+  function next(i){
+    if(i>=urls.length){
+      document.getElementById('s').className='err';
+      document.getElementById('s').textContent='Need a network connection the first time, or add Ravelin.html under app/src/main/assets/index.html and rebuild.';
+      return;
+    }
+    fetch(urls[i],{cache:'no-store'}).then(function(r){
+      if(!r.ok) throw new Error('bad');
+      return r.text();
+    }).then(function(t){
+      document.open();document.write(t);document.close();
+    }).catch(function(){ next(i+1); });
+  }
+  next(0);
+})();
+</script>
+</body>
+</html>
