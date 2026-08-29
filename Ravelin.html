@@ -4,28 +4,52 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ravelin</title>
-<style>body{margin:0;background:#0F1418;color:#E8EEF2;font-family:system-ui,sans-serif;padding:28px 20px}p{color:#A8B6C0}</style>
+<style>
+body{margin:0;background:#0F1418;color:#E8EEF2;font-family:system-ui,sans-serif;padding:28px 20px}
+h1{margin:0 0 8px;font-size:28px}
+p{color:#A8B6C0;line-height:1.5}
+button{width:100%;border:0;border-radius:14px;padding:14px;font-weight:700;font-size:16px;margin-top:10px}
+.bp{background:#7DD3C7;color:#071016}
+.bg{background:transparent;color:#7DD3C7;border:1px solid #2A3642}
+#s{margin-top:12px}
+</style>
 </head>
 <body>
-<p id="s">Loading Ravelin…</p>
+<h1>Ravelin</h1>
+<p>You only install the app once. After that, tap Update.</p>
+<p id="s">Looking for the newest version…</p>
+<button class="bp" type="button" onclick="go()">Update now</button>
+<button class="bg" type="button" onclick="go()">Try again</button>
 <script>
-(async function(){
-  var base='https://raw.githubusercontent.com/xz64uj777/Ravelin/main/console/';
+const BASE='https://raw.githubusercontent.com/xz64uj777/Ravelin/main/';
+function say(t){var el=document.getElementById('s'); if(el) el.textContent=t;}
+async function loadParts(){
   var parts=['c0.txt','c1.txt','c2.txt','c3.txt'];
+  var texts=await Promise.all(parts.map(function(p){
+    return fetch(BASE+'console/'+p+'?t='+Date.now(),{cache:'no-store'}).then(function(r){
+      if(!r.ok) throw new Error(p);
+      return r.text();
+    });
+  }));
+  var html=texts.join('');
+  if(html.length<2000) throw new Error('short');
+  document.open(); document.write(html); document.close();
+}
+async function go(){
+  say('Updating…');
   try{
-    var texts=await Promise.all(parts.map(function(p){
-      return fetch(base+p+'?v=38',{cache:'no-store'}).then(function(r){
-        if(!r.ok) throw new Error(p+' '+r.status);
-        return r.text();
-      });
-    }));
-    var html=texts.join('');
-    document.open();document.write(html);document.close();
+    await loadParts();
   }catch(e){
-    var el=document.getElementById('s');
-    el.textContent='Need a network connection the first time to load the console. '+e;
+    try{
+      var r=await fetch(BASE+'version.json?t='+Date.now(),{cache:'no-store'});
+      var v=await r.json();
+      say('Latest on the server is v'+(v.version||'?')+'. Full console is still arriving. Stay on Wi-Fi and tap Update now.');
+    }catch(e2){
+      say('Need Wi-Fi. Then tap Update now.');
+    }
   }
-})();
+}
+go();
 </script>
 </body>
 </html>
