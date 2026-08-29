@@ -23,31 +23,30 @@ button{width:100%;border:0;border-radius:14px;padding:14px;font-weight:700;font-
 <script>
 const BASE='https://raw.githubusercontent.com/xz64uj777/Ravelin/main/';
 function say(t){var el=document.getElementById('s'); if(el) el.textContent=t;}
-async function loadFull(){
-  var r=await fetch(BASE+'Ravelin.html?t='+Date.now(),{cache:'no-store'});
-  if(!r.ok) throw new Error('html');
-  var html=await r.text();
-  if(html.length>20000 && html.indexOf('function applyUpdate')>=0) return html;
-  throw new Error('loader-loop');
+function decodeB64Utf8(b64){
+  var clean=String(b64||'').replace(/\s/g,'');
+  var bin=atob(clean);
+  var bytes=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
 }
 async function loadParts(){
-  var parts=['c0.txt','c1.txt','c2.txt','c3.txt'];
-  var texts=await Promise.all(parts.map(function(p){
+  var names=[];
+  for(var i=0;i<8;i++) names.push('p'+i+'.b64');
+  var texts=await Promise.all(names.map(function(p){
     return fetch(BASE+'console/'+p+'?t='+Date.now(),{cache:'no-store'}).then(function(r){
       if(!r.ok) throw new Error(p);
       return r.text();
     });
   }));
-  var html=texts.join('');
-  if(html.length<20000) throw new Error('short');
+  var html=decodeB64Utf8(texts.join(''));
+  if(html.length<20000 || html.indexOf('function applyUpdate')<0) throw new Error('short');
   return html;
 }
 async function go(){
   say('Updating…');
   try{
-    var html;
-    try{ html=await loadParts(); }
-    catch(e){ html=await loadFull(); }
+    var html=await loadParts();
     document.open(); document.write(html); document.close();
   }catch(e){
     try{
