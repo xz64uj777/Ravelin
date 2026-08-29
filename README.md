@@ -1,42 +1,27 @@
 # Ravelin
 
-Phone security console by Kyle. Copyright (c) 2026 Kyle. All rights reserved.
+Copyright (c) 2026 Kyle. All rights reserved.
 
-Repo: https://github.com/xz64uj777/Ravelin
+## Easiest way to use it
 
-This Android project wraps the Ravelin console in a WebView so you can install it as a real app on an S24 FE (or any Android 8+ phone).
+1. Install the app once from GitHub Actions (`ravelin-debug-apk` → unzip → tap `app-debug.apk`).
+2. Open **Ravelin**.
+3. After that, you usually do **nothing**.
 
-## Get the APK from your phone
+The app loads the newest console from this repo when the phone is online.
 
-1. Open this repo on GitHub: [xz64uj777/Ravelin](https://github.com/xz64uj777/Ravelin)
-2. Tap **Actions**
-3. Tap the workflow named **Build APK**
-4. Open the latest run (green check = done)
-5. Scroll to **Artifacts**
-6. Download **ravelin-debug-apk**
-7. Unzip it on the phone
-8. Open `app-debug.apk`
-9. If Android blocks it: Settings → Apps → special access → Install unknown apps → allow Chrome/Files for this one install
-10. Open **Ravelin** from the app drawer
+To force a refresh: **Settings → Update now**.
 
-The first GitHub Actions run can take 3–6 minutes. If Actions is empty, tap the workflow, then **Run workflow**.
+You do not need to rebuild or reinstall for honey pot / layout / wording changes.
 
-## What the APK can do
+## First install (only once)
 
-- Full Ravelin UI (Home, Honey pot, Threats, Settings)
-- Honey pot decoys, Send to pot, in-app /24 blocks
-- File fingerprint (SHA-256 stays on the phone)
-- "Show me" buttons that try to open the matching Android Settings screen
-- Auto-load updates from this repo when the phone is online
+1. Open https://github.com/xz64uj777/Ravelin/actions
+2. Tap the newest green **Build APK**
+3. Download **ravelin-debug-apk**
+4. Unzip and tap `app-debug.apk`
+5. Allow install if Android asks
 
-Hard limit: without root, Android will not let any Play-installable app silently kill other apps' processes. Ravelin automates everything Play allows. You still confirm Force stop / Uninstall.
+## Limits
 
-## Build it yourself
-
-```
-./gradlew assembleDebug
-```
-
-APK output: `app/build/outputs/apk/debug/app-debug.apk`
-
-Build ID: RAVELIN-KYLE-2026-V38
+Ravelin cannot silently kill other apps. Android does not allow that without root. You still confirm Force stop / Uninstall.
