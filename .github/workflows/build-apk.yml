@@ -27,19 +27,30 @@ jobs:
       - name: Generate Gradle wrapper
         run: gradle wrapper --gradle-version 8.9
 
-      - name: Embed console if present
+      - name: Decode and embed Ravelin console
         run: |
           mkdir -p app/src/main/assets
-          if [ -f Ravelin.html ]; then
-            cp Ravelin.html app/src/main/assets/index.html
-            echo "Embedded Ravelin.html into assets"
-          elif [ -f app/src/main/assets/index.html ]; then
-            echo "Using existing assets/index.html"
-          else
-            echo "Missing console HTML" >&2
-            exit 1
-          fi
-          wc -c app/src/main/assets/index.html
+          python3 - <<'PY'
+          import base64, gzip, pathlib
+          root = pathlib.Path('.')
+          assets = pathlib.Path('app/src/main/assets/index.html')
+          b64 = root / 'Ravelin.html.gz.b64'
+          html = root / 'Ravelin.html'
+          if b64.exists():
+              raw = gzip.decompress(base64.b64decode(b64.read_text().replace('\n','').replace(' ','')))
+              html.write_bytes(raw)
+              assets.write_bytes(raw)
+              print('decoded', len(raw), 'bytes from Ravelin.html.gz.b64')
+          elif html.exists():
+              assets.write_bytes(html.read_bytes())
+              print('copied Ravelin.html into assets', html.stat().st_size)
+          elif assets.exists():
+              print('using existing assets/index.html', assets.stat().st_size)
+          else:
+              raise SystemExit('no console HTML found')
+          PY
+          wc -c app/src/main/assets/index.html Ravelin.html || true
+          grep -o 'v38' app/src/main/assets/index.html | head -1
 
       - name: Assemble debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
