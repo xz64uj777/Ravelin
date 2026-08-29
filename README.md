@@ -2,25 +2,30 @@
 
 Copyright (c) 2026 Kyle. All rights reserved.
 
-## Easiest way to use it
+## Easiest way (do this)
 
-1. Install the app once from GitHub Actions (`ravelin-debug-apk` → unzip → tap `app-debug.apk`).
-2. Open **Ravelin**.
-3. After that, you usually do **nothing**.
+You install the app **once**. After that you only tap **Update now**.
 
-The app loads the newest console from this repo when the phone is online.
+1. Open Ravelin on your phone.
+2. Stay on Wi-Fi.
+3. Tap **Update now** (Home banner, or Settings).
+4. Wait a few seconds. Done.
 
-To force a refresh: **Settings → Update now**.
+You do **not** go back to GitHub.
+You do **not** rebuild.
+You do **not** uninstall.
 
-You do not need to rebuild or reinstall for honey pot / layout / wording changes.
-
-## First install (only once)
+## First install only (skip if the app is already on the phone)
 
 1. Open https://github.com/xz64uj777/Ravelin/actions
 2. Tap the newest green **Build APK**
 3. Download **ravelin-debug-apk**
 4. Unzip and tap `app-debug.apk`
 5. Allow install if Android asks
+
+## What Update does
+
+It downloads the newest honey pot and screens from this repo and turns them on inside the app.
 
 ## Limits
 

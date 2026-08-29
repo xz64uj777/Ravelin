@@ -16,13 +16,20 @@ button{width:100%;border:0;border-radius:14px;padding:14px;font-weight:700;font-
 </head>
 <body>
 <h1>Ravelin</h1>
-<p>You only install the app once. After that, tap Update.</p>
-<p id="s">Looking for the newest version…</p>
+<p>You install the app once. After that, tap Update.</p>
+<p id="s">Getting the newest version…</p>
 <button class="bp" type="button" onclick="go()">Update now</button>
 <button class="bg" type="button" onclick="go()">Try again</button>
 <script>
 const BASE='https://raw.githubusercontent.com/xz64uj777/Ravelin/main/';
 function say(t){var el=document.getElementById('s'); if(el) el.textContent=t;}
+async function loadFull(){
+  var r=await fetch(BASE+'Ravelin.html?t='+Date.now(),{cache:'no-store'});
+  if(!r.ok) throw new Error('html');
+  var html=await r.text();
+  if(html.length>20000 && html.indexOf('function applyUpdate')>=0) return html;
+  throw new Error('loader-loop');
+}
 async function loadParts(){
   var parts=['c0.txt','c1.txt','c2.txt','c3.txt'];
   var texts=await Promise.all(parts.map(function(p){
@@ -32,18 +39,21 @@ async function loadParts(){
     });
   }));
   var html=texts.join('');
-  if(html.length<2000) throw new Error('short');
-  document.open(); document.write(html); document.close();
+  if(html.length<20000) throw new Error('short');
+  return html;
 }
 async function go(){
   say('Updating…');
   try{
-    await loadParts();
+    var html;
+    try{ html=await loadParts(); }
+    catch(e){ html=await loadFull(); }
+    document.open(); document.write(html); document.close();
   }catch(e){
     try{
       var r=await fetch(BASE+'version.json?t='+Date.now(),{cache:'no-store'});
       var v=await r.json();
-      say('Latest on the server is v'+(v.version||'?')+'. Full console is still arriving. Stay on Wi-Fi and tap Update now.');
+      say('Latest on the server is v'+(v.version||'?')+'. Stay on Wi-Fi and tap Update now.');
     }catch(e2){
       say('Need Wi-Fi. Then tap Update now.');
     }

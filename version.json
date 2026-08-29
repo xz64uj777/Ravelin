@@ -1,7 +1,7 @@
 {
   "product": "Ravelin",
-  "version": "39",
+  "version": "40",
   "apk": 39,
-  "note": "In-app Update is in Settings.",
+  "note": "Tap Update now inside the app. No reinstall.",
   "html": "https://raw.githubusercontent.com/xz64uj777/Ravelin/main/Ravelin.html"
 }
