@@ -27,30 +27,38 @@ jobs:
       - name: Generate Gradle wrapper
         run: gradle wrapper --gradle-version 8.9
 
-      - name: Decode and embed Ravelin console
+      - name: Embed Ravelin console
         run: |
           mkdir -p app/src/main/assets
           python3 - <<'PY'
           import base64, gzip, pathlib
           root = pathlib.Path('.')
           assets = pathlib.Path('app/src/main/assets/index.html')
-          b64 = root / 'Ravelin.html.gz.b64'
+          parts = sorted(root.glob('Ravelin.html.gz.b64.*'))
+          b64p = root / 'Ravelin.html.gz.b64'
           html = root / 'Ravelin.html'
-          if b64.exists():
-              raw = gzip.decompress(base64.b64decode(b64.read_text().replace('\n','').replace(' ','')))
-              html.write_bytes(raw)
-              assets.write_bytes(raw)
+          raw = None
+          if parts:
+              blob = ''.join(p.read_text().replace('\n','').replace(' ','') for p in parts)
+              raw = gzip.decompress(base64.b64decode(blob))
+              print('decoded', len(raw), 'bytes from', len(parts), 'parts')
+          elif b64p.exists():
+              raw = gzip.decompress(base64.b64decode(b64p.read_text().replace('\n','').replace(' ','')))
               print('decoded', len(raw), 'bytes from Ravelin.html.gz.b64')
-          elif html.exists():
-              assets.write_bytes(html.read_bytes())
-              print('copied Ravelin.html into assets', html.stat().st_size)
-          elif assets.exists():
+          elif html.exists() and html.stat().st_size > 20000:
+              raw = html.read_bytes()
+              print('copied Ravelin.html', len(raw))
+          elif assets.exists() and assets.stat().st_size > 20000:
               print('using existing assets/index.html', assets.stat().st_size)
           else:
-              raise SystemExit('no console HTML found')
+              raise SystemExit('no full console HTML found')
+          if raw is not None:
+              html.write_bytes(raw)
+              assets.write_bytes(raw)
+              print('wrote assets/index.html', len(raw))
           PY
-          wc -c app/src/main/assets/index.html Ravelin.html || true
-          grep -o 'v38' app/src/main/assets/index.html | head -1
+          wc -c app/src/main/assets/index.html || true
+          grep -o 'v40' app/src/main/assets/index.html | head -1
 
       - name: Assemble debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
