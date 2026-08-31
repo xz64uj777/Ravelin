@@ -31,57 +31,67 @@ jobs:
         run: |
           mkdir -p app/src/main/assets
           python3 - <<'PY'
-          import base64, gzip, pathlib
+          import base64, gzip, pathlib, urllib.request
           root = pathlib.Path('.')
           assets = pathlib.Path('app/src/main/assets/index.html')
-          parts = sorted(root.glob('Ravelin.html.gz.b64.*'))
-          b64p = root / 'Ravelin.html.gz.b64'
-          htmlp = root / 'Ravelin.html'
+          good = 'https://raw.githubusercontent.com/xz64uj777/Ravelin/14c3db84d0eac95b8acc21d3a334158bd1fadcd7/'
           raw = None
-          if parts:
-              blob = ''.join(p.read_text().replace('\n','').replace(' ','') for p in parts)
+          try:
+              parts = sorted(root.glob('Ravelin.html.gz.b64.*'))
+              if parts:
+                  blob = ''.join(p.read_text().replace('\n','').replace(' ','') for p in parts)
+                  raw = gzip.decompress(base64.b64decode(blob))
+                  print('decoded local parts', len(raw))
+          except Exception as e:
+              print('local gzip failed', e)
+              raw = None
+          if raw is None:
+              blob = ''
+              for i in range(3):
+                  url = good + 'Ravelin.html.gz.b64.' + str(i)
+                  print('fetch', url)
+                  blob += urllib.request.urlopen(url).read().decode('ascii').replace('\n','').replace(' ','')
               raw = gzip.decompress(base64.b64decode(blob))
-              print('decoded', len(raw), 'bytes from', len(parts), 'parts')
-          elif b64p.exists():
-              raw = gzip.decompress(base64.b64decode(b64p.read_text().replace('\n','').replace(' ','')))
-              print('decoded', len(raw), 'bytes from Ravelin.html.gz.b64')
-          elif htmlp.exists() and htmlp.stat().st_size > 20000:
-              raw = htmlp.read_bytes()
-              print('copied Ravelin.html', len(raw))
-          elif assets.exists() and assets.stat().st_size > 20000:
-              print('using existing assets/index.html', assets.stat().st_size)
-          else:
-              raise SystemExit('no full console HTML found')
-          if raw is not None:
-              text = raw.decode('utf-8', errors='replace')
-              text = text.replace("window.RAVELIN_BUILD='v40'", "window.RAVELIN_BUILD='v41'")
-              text = text.replace("const RAVELIN_VERSION='40'", "const RAVELIN_VERSION='41'")
-              text = text.replace('RAVELIN-KYLE-2026-V40', 'RAVELIN-KYLE-2026-V41')
-              text = text.replace('>v40</strong>', '>v41</strong>')
-              old = '''if(window.RavelinNative && RavelinNative.reloadLive){\n      try{ RavelinNative.reloadLive(url); return; }catch(e){}\n    }'''
-              new = '''if(false && window.RavelinNative && RavelinNative.reloadLive){\n      try{ RavelinNative.reloadLive(url); return; }catch(e){}\n    }\n    ov('Update','Downloading\u2026',45);\n    const html=await fetchConsoleHtml();\n    if(window.RavelinNative && RavelinNative.applyHtml){\n      try{ RavelinNative.applyHtml(html); return; }catch(e){}\n    }'''
-              if old in text:
-                  text = text.replace(old, new, 1)
-                  print('patched applyUpdate away from loader')
-              else:
-                  print('applyUpdate patch point not found')
-              extra = '''\n<script>\n/* v41 persist helper */\n(function(){\n  var _au = window.applyUpdate;
-  if(typeof _au !== 'function') return;
-  window.applyUpdate = async function(){\n    try{\n      if(typeof ov==='function') ov('Update','Getting the newest Ravelin\u2026',18);
-      var html = await fetchConsoleHtml();
-      if(window.RavelinNative && RavelinNative.applyHtml){\n        RavelinNative.applyHtml(html); return;
-      }\n      document.open(); document.write(html); document.close();
-    }catch(e){\n      if(typeof ovHide==='function') ovHide();
-      alert('Stay on Wi-Fi and tap Update now again.');
-    }\n  };\n})();\n</script>\n'''
-              if '</body>' in text:
-                  text = text.replace('</body>', extra + '</body>', 1)
-              raw = text.encode('utf-8')
-              htmlp.write_bytes(raw)
-              assets.write_bytes(raw)
-              print('wrote assets/index.html', len(raw))
+              print('decoded pinned parts', len(raw))
+          text = raw.decode('utf-8', errors='replace')
+          text = text.replace("window.RAVELIN_BUILD='v40'", "window.RAVELIN_BUILD='v41'")
+          text = text.replace("const RAVELIN_VERSION='40'", "const RAVELIN_VERSION='41'")
+          text = text.replace('RAVELIN-KYLE-2026-V40', 'RAVELIN-KYLE-2026-V41')
+          text = text.replace('>v40</strong>', '>v41</strong>')
+          old = 'if(window.RavelinNative && RavelinNative.reloadLive){\n      try{ RavelinNative.reloadLive(url); return; }catch(e){}\n    }'
+          new = '/* v41: do not load the short loader */'
+          if old in text:
+              text = text.replace(old, new, 1)
+              print('disabled reloadLive shortcut')
+          hook = '''<script>
+window.fetchConsoleHtml = window.fetchConsoleHtml || (async function(){
+  var BASE='https://raw.githubusercontent.com/xz64uj777/Ravelin/14c3db84d0eac95b8acc21d3a334158bd1fadcd7/';
+  var names=['Ravelin.html.gz.b64.0','Ravelin.html.gz.b64.1','Ravelin.html.gz.b64.2'];
+  var texts=await Promise.all(names.map(function(p){
+    return fetch(BASE+p+'?t='+Date.now(),{cache:'no-store'}).then(function(r){
+      if(!r.ok) throw new Error(p);
+      return r.text();
+    });
+  }));
+  var clean=texts.join('').replace(/\s/g,'');
+  var bin=atob(clean);
+  var bytes=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+  var ds=new DecompressionStream('gzip');
+  var stream=new Blob([bytes]).stream().pipeThrough(ds);
+  var html=await new Response(stream).text();
+  if(html.length<20000) throw new Error('short');
+  return html;
+});
+</script>
+'''
+          if '</body>' in text:
+              text = text.replace('</body>', hook + '</body>', 1)
+          raw = text.encode('utf-8')
+          assets.write_bytes(raw)
+          print('wrote assets/index.html', len(raw))
           PY
-          wc -c app/src/main/assets/index.html || true
+          wc -c app/src/main/assets/index.html
           grep -o 'v41' app/src/main/assets/index.html | head -3
 
       - name: Assemble debug APK
