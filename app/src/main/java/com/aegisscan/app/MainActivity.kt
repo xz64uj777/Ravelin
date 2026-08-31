@@ -1,7 +1,7 @@
 /*
  * Ravelin
  * Copyright (c) 2026 Kyle. All rights reserved.
- * Build ID: RAVELIN-KYLE-2026-V40
+ * Build ID: RAVELIN-KYLE-2026-V41
  */
 package com.aegisscan.app
 
@@ -13,6 +13,7 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,6 +23,8 @@ class MainActivity : AppCompatActivity() {
         const val BUNDLED = "file:///android_asset/index.html"
         const val LIVE =
             "https://raw.githubusercontent.com/xz64uj777/Ravelin/main/Ravelin.html"
+        const val REMOTE_BASE =
+            "https://raw.githubusercontent.com/xz64uj777/Ravelin/main/"
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -48,6 +51,17 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState)
         } else {
+            openBestConsole()
+        }
+    }
+
+    private fun cachedConsole(): File = File(filesDir, "console.html")
+
+    private fun openBestConsole() {
+        val cached = cachedConsole()
+        if (cached.exists() && cached.length() > 20000L) {
+            webView.loadUrl("file://" + cached.absolutePath)
+        } else {
             webView.loadUrl(BUNDLED)
         }
     }
@@ -55,13 +69,7 @@ class MainActivity : AppCompatActivity() {
     inner class RavelinBridge {
         @JavascriptInterface
         fun reloadLive(url: String) {
-            val target = if (url.isBlank()) LIVE else url
-            runOnUiThread {
-                webView.settings.cacheMode = WebSettings.LOAD_NO_CACHE
-                webView.clearCache(true)
-                val sep = if (target.contains("?")) "&" else "?"
-                webView.loadUrl(target + sep + "t=" + System.currentTimeMillis())
-            }
+            runOnUiThread { openBestConsole() }
         }
 
         @JavascriptInterface
@@ -74,11 +82,15 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun applyHtml(html: String) {
-            if (html.length < 2000) return
+            if (html.length < 20000) return
+            try {
+                cachedConsole().writeText(html, Charsets.UTF_8)
+            } catch (_: Exception) {
+            }
             runOnUiThread {
                 webView.settings.cacheMode = WebSettings.LOAD_NO_CACHE
                 webView.loadDataWithBaseURL(
-                    "https://raw.githubusercontent.com/xz64uj777/Ravelin/main/",
+                    REMOTE_BASE,
                     html,
                     "text/html",
                     "UTF-8",
@@ -88,7 +100,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
-        fun apkVersion(): String = "40"
+        fun apkVersion(): String = "41"
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

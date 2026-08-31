@@ -2,7 +2,7 @@
 
 Copyright (c) 2026 Kyle. All rights reserved.
 
-Build 40 — in-app update is inside the APK.
+Build 41 — in-app update is inside the APK.
 
 ## Install this APK (once)
 
@@ -21,7 +21,7 @@ The app already contains the full honey pot. It opens even offline.
 3. Tap **Update now** (Home or Settings)
 4. Wait a few seconds
 
-No rebuild. No uninstall. No GitHub after the first install.
+The new screens stay on the phone. Next launch uses them. No rebuild. No uninstall.
 
 ## Limits
 

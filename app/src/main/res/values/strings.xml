@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Ravelin</string>
-    <string name="copyright_notice">Copyright (c) 2026 Kyle. All rights reserved.</string>
-    <string name="build_id">RAVELIN-KYLE-2026-V38</string>
+    <string name="copyright_notice">Copyright (c) 2026 Kyle. All rights reserved. Proprietary. Unauthorized copying prohibited.</string>
+    <string name="build_id">RAVELIN-KYLE-2026-V41</string>
 </resources>

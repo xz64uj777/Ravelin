@@ -30,12 +30,10 @@ function decodeB64Utf8(b64){
   for(var i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
   return new TextDecoder('utf-8').decode(bytes);
 }
-async function loadParts(){
-  var names=[];
-  for(var i=0;i<8;i++) names.push('p'+i+'.b64');
-  var texts=await Promise.all(names.map(function(p){
-    return fetch(BASE+'console/'+p+'?t='+Date.now(),{cache:'no-store'}).then(function(r){
-      if(!r.ok) throw new Error(p);
+async function fromParts(){
+  var texts=await Promise.all(Array.from({length:12},function(_,i){
+    return fetch(BASE+'console/p'+i+'.b64?t='+Date.now(),{cache:'no-store'}).then(function(r){
+      if(!r.ok) throw new Error('p'+i);
       return r.text();
     });
   }));
@@ -43,10 +41,34 @@ async function loadParts(){
   if(html.length<20000 || html.indexOf('function applyUpdate')<0) throw new Error('short');
   return html;
 }
+async function fromGzip(){
+  var names=['Ravelin.html.gz.b64.0','Ravelin.html.gz.b64.1','Ravelin.html.gz.b64.2'];
+  var texts=await Promise.all(names.map(function(p){
+    return fetch(BASE+p+'?t='+Date.now(),{cache:'no-store'}).then(function(r){
+      if(!r.ok) throw new Error(p);
+      return r.text();
+    });
+  }));
+  var clean=texts.join('').replace(/\s/g,'');
+  var bin=atob(clean);
+  var bytes=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+  var ds=new DecompressionStream('gzip');
+  var stream=new Blob([bytes]).stream().pipeThrough(ds);
+  var html=await new Response(stream).text();
+  if(html.length<20000 || html.indexOf('function applyUpdate')<0) throw new Error('shortgz');
+  return html;
+}
 async function go(){
   say('Updating…');
   try{
-    var html=await loadParts();
+    var html;
+    try{ html=await fromParts(); }
+    catch(e){ html=await fromGzip(); }
+    if(window.RavelinNative && RavelinNative.applyHtml){
+      RavelinNative.applyHtml(html);
+      return;
+    }
     document.open(); document.write(html); document.close();
   }catch(e){
     try{
