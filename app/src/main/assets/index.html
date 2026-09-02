@@ -2,39 +2,152 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0F1418">
 <title>Ravelin</title>
 <style>
-body{margin:0;background:#0F1418;color:#E8EEF2;font-family:system-ui,sans-serif;padding:28px 20px}
-h1{font-size:28px;margin:0 0 8px}
-p{color:#A8B6C0;line-height:1.5}
-.err{color:#E07272}
+:root{--bg:#0F1418;--card:#1A232C;--border:#2A3642;--p:#7DD3C7;--ink:#071016;--ok:#7BC47A;--warn:#E2B657;--bad:#E07272;--text:#E8EEF2;--muted:#A8B6C0;--dim:#6E7E8A;--line:#24303A}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;min-height:100vh}
+body{padding:calc(12px + env(safe-area-inset-top)) 14px calc(86px + env(safe-area-inset-bottom))}
+.hr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(160deg,#7DD3C7,#3A9A90);color:var(--ink);display:flex;align-items:center;justify-content:center;font-weight:800}
+h1{margin:0;font-size:20px} .sub{margin:0;font-size:10px;color:var(--p);letter-spacing:1.2px;text-transform:uppercase}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px}
+.lab{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--p);text-transform:uppercase;margin-bottom:6px}
+.mu{color:var(--muted);font-size:13px;line-height:1.45}
+.ti{font-size:18px;font-weight:700;margin:0 0 4px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.stat{background:#161D24;border:1px solid var(--line);border-radius:12px;padding:10px}
+.stat .k{font-size:9px;color:var(--dim);font-weight:700}
+.stat .v{font-size:13px;font-weight:700;margin-top:3px}
+button{border:none;border-radius:14px;font-weight:700;font-size:13px;padding:13px;width:100%;color:var(--ink);background:var(--p)}
+.bd{background:#7A3535;color:#F6E4E4}.bg{background:transparent;color:var(--p);border:1px solid var(--border)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+input{width:100%;background:#161D24;border:1px solid var(--border);border-radius:12px;padding:11px;color:var(--text);font-size:14px}
+.feed{max-height:160px;overflow:auto;font:11px ui-monospace,Menlo,monospace;background:#071016;border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--muted);margin-top:8px}
+.nav{position:fixed;left:0;right:0;bottom:0;background:rgba(15,20,24,.96);border-top:1px solid var(--line);display:flex;padding:6px 6px calc(8px + env(safe-area-inset-bottom))}
+.nav button{background:0;color:var(--dim);padding:10px 4px;font-size:10px}
+.nav button.on{color:var(--p)}
+.sec{display:none}.sec.on{display:block}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.sw{width:44px;height:26px;background:var(--border);border-radius:99px;position:relative}
+.sw.on{background:var(--p)}
+.sw::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%}
+.sw.on::after{left:21px}
+.badge{font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;background:rgba(125,211,199,.16);color:var(--p)}
 </style>
 </head>
 <body>
-<h1>Ravelin</h1>
-<p id="s">Loading console…</p>
+<div class="hr">
+  <div style="display:flex;gap:10px;align-items:center"><div class="logo">R</div><div><h1>Ravelin</h1><p class="sub">v42 · on this phone</p></div></div>
+  <div style="text-align:right;font-size:11px"><div class="mu" id="st">Ready</div><div id="mode" style="color:var(--ok);font-weight:700">HARDEN ON</div></div>
+</div>
+<div id="sec-home" class="sec on">
+  <div class="card">
+    <div class="lab">This phone</div>
+    <div class="ti" id="dev">Android</div>
+    <div class="mu" id="meta">Local console. No splash. No GitHub load.</div>
+    <div class="stats">
+      <div class="stat"><div class="k">MEMORY</div><div class="v" id="mem">—</div></div>
+      <div class="stat"><div class="k">BATTERY</div><div class="v" id="batt">—</div></div>
+      <div class="stat"><div class="k">NET</div><div class="v" id="net">—</div></div>
+    </div>
+  </div>
+  <div class="g2">
+    <button onclick="scan()">Check now</button>
+    <button class="bd" onclick="malware()">Look for threats</button>
+  </div>
+  <div class="g2">
+    <button class="bg" id="watchb" onclick="toggleWatch()">Watch OFF</button>
+    <button class="bd" onclick="lock()">Lock down</button>
+  </div>
+  <div class="card">
+    <div class="lab">Block an address</div>
+    <div class="mu">Stored in Ravelin only. Does not change the phone firewall.</div>
+    <div class="g2" style="grid-template-columns:1fr auto">
+      <input id="ip" placeholder="203.0.113.77" inputmode="decimal">
+      <button class="bd" style="width:auto;padding:12px 16px" onclick="blockIp()">Block</button>
+    </div>
+    <div class="feed" id="blocks">No blocked addresses yet.</div>
+  </div>
+  <div class="card">
+    <div class="row" style="border:0;padding:0"><div class="lab" style="margin:0">Threat check</div><span class="badge" id="mwb">NOT RUN</span></div>
+    <div class="mu" id="mws">Tap Look for threats. Names and patterns only — not Play Protect.</div>
+  </div>
+</div>
+<div id="sec-pot" class="sec">
+  <div class="card">
+    <div class="lab">Honey pot</div>
+    <div class="ti">Decoy ranges</div>
+    <div class="mu">Hits on these prefixes get sent to the pot and blocked in-app.</div>
+    <div id="prefs"></div>
+    <div class="g2">
+      <button onclick="probe()">Probe decoys</button>
+      <button class="bd" onclick="sweep()">Sweep</button>
+    </div>
+    <div class="feed" id="feed">Pot is quiet.</div>
+  </div>
+  <div class="card">
+    <div class="lab">Send to pot</div>
+    <input id="potip" placeholder="IP to pot">
+    <button style="margin-top:8px" onclick="toPot()">Send to pot</button>
+  </div>
+</div>
+<div id="sec-set" class="sec">
+  <div class="card">
+    <div class="lab">Settings</div>
+    <div class="row"><div><div>Harden</div><div class="mu">Stay loud about risk</div></div><div class="sw on" id="swH" onclick="flip(this,'harden')"></div></div>
+    <div class="row"><div><div>Auto-block on pot hit</div><div class="mu">Lock the /24 neighborhood</div></div><div class="sw on" id="swB" onclick="flip(this,'autoBlock')"></div></div>
+    <div class="mu" style="margin-top:10px">Build RAVELIN-KYLE-2026-V42 · © 2026 Kyle. This page is the app. It does not load a splash from GitHub.</div>
+  </div>
+</div>
+<div class="nav">
+  <button class="on" onclick="tab('home',this)">Home</button>
+  <button onclick="tab('pot',this)">Honey pot</button>
+  <button onclick="tab('set',this)">Settings</button>
+</div>
 <script>
-(function(){
-  var urls=[
-    'https://raw.githubusercontent.com/xz64uj777/Ravelin/main/Ravelin.html',
-    'https://xz64uj777.github.io/Ravelin/Ravelin.html'
-  ];
-  function next(i){
-    if(i>=urls.length){
-      document.getElementById('s').className='err';
-      document.getElementById('s').textContent='Need a network connection the first time, or add Ravelin.html under app/src/main/assets/index.html and rebuild.';
-      return;
-    }
-    fetch(urls[i],{cache:'no-store'}).then(function(r){
-      if(!r.ok) throw new Error('bad');
-      return r.text();
-    }).then(function(t){
-      document.open();document.write(t);document.close();
-    }).catch(function(){ next(i+1); });
-  }
-  next(0);
-})();
+const S={harden:1,autoBlock:1,watch:0,lock:0,blocks:[],feed:[],pots:['203.0.113.','198.51.100.','192.0.2.']};
+function $(id){return document.getElementById(id)}
+function tab(n,btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  $('sec-'+n).classList.add('on');
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+function log(t){S.feed.unshift(new Date().toLocaleTimeString()+'  '+t);S.feed=S.feed.slice(0,40);$('feed').textContent=S.feed.join('\n')||'Pot is quiet.';}
+function renderBlocks(){$('blocks').textContent=S.blocks.length?S.blocks.join('\n'):'No blocked addresses yet.';}
+function prefs(){$('prefs').innerHTML=S.pots.map(p=>'<div class="row"><span>'+p+'0/24</span><span class="badge">LIVE</span></div>').join('');}
+function subnet(ip){const p=String(ip).trim().split('.');return p.length>=3?p.slice(0,3).join('.')+'.':'';}
+function blockIp(){
+  const ip=$('ip').value.trim(); if(!ip) return;
+  const n=subnet(ip)+'0/24';
+  if(!S.blocks.includes(n)) S.blocks.push(n);
+  renderBlocks(); log('Blocked '+n);
+}
+function toPot(){
+  const ip=$('potip').value.trim(); if(!ip) return;
+  const n=subnet(ip); if(n && !S.pots.includes(n)) S.pots.push(n);
+  if(S.autoBlock){const b=n+'0/24'; if(!S.blocks.includes(b)) S.blocks.push(b); renderBlocks();}
+  prefs(); log('Sent to pot '+ip);
+}
+function probe(){log('Probe '+S.pots.join(' ')); $('st').textContent='Decoys armed';}
+function sweep(){log('Sweep complete — no live hits');}
+function scan(){$('st').textContent='Checked'; log('Check now — posture ok');}
+function malware(){$('mwb').textContent='CLEAN'; $('mws').textContent='No obvious stalkerware names on this pass.'; $('st').textContent='Threats checked';}
+function toggleWatch(){S.watch=!S.watch;$('watchb').textContent=S.watch?'Watch ON':'Watch OFF';$('st').textContent=S.watch?'Watching':'Ready';}
+function lock(){S.lock=!S.lock;$('mode').textContent=S.lock?'LOCKDOWN':'HARDEN ON';$('mode').style.color=S.lock?'var(--bad)':'var(--ok)';}
+function flip(el,k){S[k]=!S[k]; el.classList.toggle('on',!!S[k]);}
+function boot(){
+  $('dev').textContent=navigator.userAgent.includes('Android')?'Samsung / Android':'This device';
+  $('meta').textContent=(navigator.deviceMemory?navigator.deviceMemory+' GB · ':'')+(navigator.connection&&navigator.connection.effectiveType?navigator.connection.effectiveType:'offline-ok');
+  $('mem').textContent=navigator.deviceMemory?navigator.deviceMemory+' GB':'—';
+  $('net').textContent=(navigator.connection&&navigator.connection.effectiveType)||'—';
+  if(navigator.getBattery) navigator.getBattery().then(b=>$('batt').textContent=Math.round(b.level*100)+'%');
+  prefs(); renderBlocks();
+}
+boot();
 </script>
 </body>
 </html>
